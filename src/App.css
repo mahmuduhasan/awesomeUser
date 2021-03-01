@@ -32,3 +32,9 @@
   align-items: center;
   flex-wrap: wrap;
 }
+.loader {
+  height: 90.8vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

@@ -3,6 +3,8 @@ import { connect } from "react-redux";
 import LoadUser from "./LoadUser";
 import SelectedUser from "./SelectedUser";
 import { Modal, ModalBody, ModalFooter, Button } from "reactstrap";
+import { addPost, fetchUser } from "../../Redux/ActionCreator";
+import Loader from "./Loader";
 
 const mapStateToProps = (state) => {
   return {
@@ -13,15 +15,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    addPost: (userId, title, post) =>
-      dispatch({
-        type: "ADD_POST",
-        payload: {
-          userId: userId,
-          title: title,
-          body: post,
-        },
-      }),
+    addPost: (userId, title, post) => dispatch(addPost(userId, title, post)),
+    fetchUser: () => dispatch(fetchUser()),
   };
 };
 
@@ -43,40 +38,48 @@ class User extends Component {
       isModalOpen: !this.state.isModalOpen,
     });
   };
+
+  componentDidMount() {
+    this.props.fetchUser();
+  }
   render() {
-    const loadUser = this.props.dataUser.map((user, index) => {
-      return (
-        <LoadUser
-          passUser={user}
-          key={index}
-          userInfo={() => this.showUserInfo(user)}
-        />
-      );
-    });
-    let userSelect = null;
-    if (this.state.selectedUser != null) {
-      const posts = this.props.dataPost.filter((post) => {
-        return post.userId === this.state.selectedUser.id;
+    if (this.props.dataUser.isLoaded) {
+      return <Loader />;
+    } else {
+      const loadUser = this.props.dataUser.userData.map((user, index) => {
+        return (
+          <LoadUser
+            passUser={user}
+            key={index}
+            userInfo={() => this.showUserInfo(user)}
+          />
+        );
       });
-      userSelect = (
-        <SelectedUser
-          selected={this.state.selectedUser}
-          postByUser={posts}
-          addPost={this.props.addPost}
-        />
+      let userSelect = null;
+      if (this.state.selectedUser != null) {
+        const posts = this.props.dataPost.filter((post) => {
+          return post.userId === this.state.selectedUser.id;
+        });
+        userSelect = (
+          <SelectedUser
+            selected={this.state.selectedUser}
+            postByUser={posts}
+            addPost={this.props.addPost}
+          />
+        );
+      }
+      return (
+        <div className="container userContainer">
+          {loadUser}
+          <Modal isOpen={this.state.isModalOpen}>
+            <ModalBody>{userSelect}</ModalBody>
+            <ModalFooter>
+              <Button onClick={this.modalHandler}>Close</Button>
+            </ModalFooter>
+          </Modal>
+        </div>
       );
     }
-    return (
-      <div className="container userContainer">
-        {loadUser}
-        <Modal isOpen={this.state.isModalOpen}>
-          <ModalBody>{userSelect}</ModalBody>
-          <ModalFooter>
-            <Button onClick={this.modalHandler}>Close</Button>
-          </ModalFooter>
-        </Modal>
-      </div>
-    );
   }
 }
 
